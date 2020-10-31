@@ -15,100 +15,83 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"go/build"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
 
 	"github.com/digitalocean/gta"
-
 	"golang.org/x/crypto/ssh/terminal"
-	"golang.org/x/tools/go/buildutil"
 )
 
-// We define this so the tooling works with build tags
-func init() {
-	flag.Var((*buildutil.TagsFlag)(&build.Default.BuildTags), "tags", buildutil.TagsFlagDoc)
-}
-
 func main() {
-	log.SetFlags(log.Lshortfile | log.Ltime)
-	base := flag.String("base", "origin/master", "base, branch to diff against")
-	include := flag.String("include", "", "define changes to be filtered with a set of comma separated prefixes")
-	merge := flag.Bool("merge", false, "diff using the latest merge commit")
-	flagJSON := flag.Bool("json", false, "output list of changes as json")
-	flagBuildableOnly := flag.Bool("buildable-only", true, "keep buildable changed packages only")
+	flagBase := flag.String("base", "origin/master", "base, branch to diff against")
+	flagMerge := flag.Bool("merge", false, "diff using the latest merge commit")
 	flagChangedFiles := flag.String("changed-files", "", "path to a file containing a newline separated list of files that have changed")
+	flagInclude := flag.String("include", "", "define changes to be filtered with a set of comma separated prefixes")
+	flagTags := flag.String("tags", "", "a list of build tags to consider")
+	// TODO(nan) need to figure out if the go/packages equivalent is skipping packages with no go files.
+	//flagBuildableOnly := flag.Bool("buildable-only", true, "keep buildable changed packages only")
+	flagJSON := flag.Bool("json", false, "output list of changes as json")
 	flag.Parse()
 
-	if *flagJSON && *flagBuildableOnly {
-		log.Fatal("-buildable-only must be set to false when using -json")
-	}
-
-	if *merge && len(*flagChangedFiles) > 0 {
-		log.Fatal("changed files must not be provided when using the latest merge commit")
+	if *flagMerge && len(*flagChangedFiles) > 0 {
+		fmt.Fprintln(os.Stderr, "changed files must not be provided when using the latest merge commit")
+		os.Exit(1)
 	}
 
 	options := []gta.Option{
-		gta.SetPrefixes(strings.Split(*include, ",")...),
+		gta.SetPrefixes(parseStringSlice(*flagInclude)...),
+		gta.SetTags(parseStringSlice(*flagTags)...),
 	}
 
 	if len(*flagChangedFiles) == 0 {
 		// override the differ to use the git differ instead.
 		gitDifferOptions := []gta.GitDifferOption{
-			gta.SetBaseBranch(*base),
-			gta.SetUseMergeCommit(*merge),
+			gta.SetBaseBranch(*flagBase),
+			gta.SetUseMergeCommit(*flagMerge),
 		}
 		options = append(options, gta.SetDiffer(gta.NewGitDiffer(gitDifferOptions...)))
 	} else {
 		sl, err := changedFiles(*flagChangedFiles)
 		if err != nil {
-			log.Fatal(fmt.Errorf("could not read changed file list: %w", err))
+			fmt.Fprintf(os.Stderr, "could not read changed file list: %s", err)
+			os.Exit(1)
 		}
 		options = append(options, gta.SetDiffer(gta.NewFileDiffer(sl)))
 	}
 
 	gt, err := gta.New(options...)
 	if err != nil {
-		log.Fatalf("can't prepare gta: %v", err)
+		fmt.Fprintf(os.Stderr, "can't prepare gta: %s", err)
+		os.Exit(1)
 	}
 
 	packages, err := gt.ChangedPackages()
 	if err != nil {
-		log.Fatalf("can't list dirty packages: %v", err)
+		fmt.Fprintf(os.Stderr, "can't list dirty packages: %s", err)
+		os.Exit(1)
 	}
 
 	if *flagJSON {
 		err = json.NewEncoder(os.Stdout).Encode(packages)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
 		return
 	}
 
-	strung := stringify(packages.AllChanges, *flagBuildableOnly)
+	packagePaths := gta.UniquePackagePaths(packages.AllChanges)
 
 	if terminal.IsTerminal(syscall.Stdin) {
-		for _, pkg := range strung {
+		for _, pkg := range packagePaths {
 			fmt.Println(pkg)
 		}
 		return
 	}
-
-	fmt.Println(strings.Join(strung, " "))
-}
-
-func stringify(pkgs []*build.Package, validOnly bool) []string {
-	var out []string
-	for _, pkg := range pkgs {
-		if !validOnly || (validOnly && pkg.SrcRoot != "") {
-			out = append(out, pkg.ImportPath)
-		}
-	}
-	return out
+	fmt.Println(strings.Join(packagePaths, " "))
 }
 
 func changedFiles(fn string) ([]string, error) {
@@ -138,6 +121,17 @@ func changedFiles(fn string) ([]string, error) {
 func keepChangedFile(s string) bool {
 	// Trim spaces, especially in case the newlines were CRLF instead of LF.
 	s = strings.TrimSpace(s)
-
 	return len(s) > 0
+}
+
+func parseStringSlice(strValue string) []string {
+	var values []string
+	for _, s := range strings.Split(strValue, ",") {
+		v := strings.TrimSpace(s)
+		if v == "" {
+			continue
+		}
+		values = append(values, v)
+	}
+	return values
 }

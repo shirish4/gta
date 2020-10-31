@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/digitalocean/gta"
+	"golang.org/x/tools/go/packages"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
@@ -103,58 +103,86 @@ func TestPackageRemoval(t *testing.T) {
 	}
 
 	want := &gta.Packages{
-		Dependencies: map[string][]*build.Package{
-			"gtaintegration/deleted": []*build.Package{
-				&build.Package{
-					ImportPath: "gtaintegration/deletedclient",
+		Dependencies: map[string][]*gta.Package{
+			"gtaintegration/deleted": {
+				{
+					Package: &packages.Package{
+						PkgPath: "gtaintegration/deletedclient",
+					},
 				},
 			},
-			"gtaintegration/gofilesdeleted": []*build.Package{
-				&build.Package{
-					ImportPath: "gtaintegration/gofilesdeletedclient",
+			"gtaintegration/gofilesdeleted": {
+				{
+					Package: &packages.Package{
+						PkgPath: "gtaintegration/gofilesdeletedclient",
+					},
 				},
 			},
-			"gtaintegration/movedfrom": []*build.Package{
-				&build.Package{
-					ImportPath: "gtaintegration/movedfromclient",
+			"gtaintegration/movedfrom": {
+				{
+					Package: &packages.Package{
+						PkgPath: "gtaintegration/movedfromclient",
+					},
 				},
 			},
 		},
-		Changes: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/deleted",
+		Changes: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/deleted",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/gofilesdeleted",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/gofilesdeleted",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedfrom",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfrom",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedto",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedto",
+				},
 			},
 		},
-		AllChanges: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/deleted",
+		AllChanges: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/deleted",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/deletedclient",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/deletedclient",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/gofilesdeleted",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/gofilesdeleted",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/gofilesdeletedclient",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/gofilesdeletedclient",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedfrom",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfrom",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedfromclient",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfromclient",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedto",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedto",
+				},
 			},
 		},
 	}
@@ -229,24 +257,32 @@ func TestPackageRemoval_AllGoFilesDeleted(t *testing.T) {
 	}
 
 	want := &gta.Packages{
-		Dependencies: map[string][]*build.Package{
-			"gtaintegration/gofilesdeleted": []*build.Package{
-				&build.Package{
-					ImportPath: "gtaintegration/gofilesdeletedclient",
+		Dependencies: map[string][]*gta.Package{
+			"gtaintegration/gofilesdeleted": {
+				{
+					Package: &packages.Package{
+						PkgPath: "gtaintegration/gofilesdeletedclient",
+					},
 				},
 			},
 		},
-		Changes: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/gofilesdeleted",
+		Changes: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/gofilesdeleted",
+				},
 			},
 		},
-		AllChanges: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/gofilesdeleted",
+		AllChanges: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/gofilesdeleted",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/gofilesdeletedclient",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/gofilesdeletedclient",
+				},
 			},
 		},
 	}
@@ -304,24 +340,32 @@ func TestPackageRemoval_RemoveDirectory(t *testing.T) {
 	}
 
 	want := &gta.Packages{
-		Dependencies: map[string][]*build.Package{
-			"gtaintegration/deleted": []*build.Package{
-				&build.Package{
-					ImportPath: "gtaintegration/deletedclient",
+		Dependencies: map[string][]*gta.Package{
+			"gtaintegration/deleted": {
+				{
+					Package: &packages.Package{
+						PkgPath: "gtaintegration/deletedclient",
+					},
 				},
 			},
 		},
-		Changes: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/deleted",
+		Changes: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/deleted",
+				},
 			},
 		},
-		AllChanges: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/deleted",
+		AllChanges: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/deleted",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/deletedclient",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/deletedclient",
+				},
 			},
 		},
 	}
@@ -379,30 +423,42 @@ func TestPackageRemoval_MovePackage(t *testing.T) {
 	}
 
 	want := &gta.Packages{
-		Dependencies: map[string][]*build.Package{
-			"gtaintegration/movedfrom": []*build.Package{
-				&build.Package{
-					ImportPath: "gtaintegration/movedfromclient",
+		Dependencies: map[string][]*gta.Package{
+			"gtaintegration/movedfrom": {
+				{
+					Package: &packages.Package{
+						PkgPath: "gtaintegration/movedfromclient",
+					},
 				},
 			},
 		},
-		Changes: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/movedfrom",
+		Changes: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfrom",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedto",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedto",
+				},
 			},
 		},
-		AllChanges: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/movedfrom",
+		AllChanges: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfrom",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedfromclient",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfromclient",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedto",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedto",
+				},
 			},
 		},
 	}
@@ -460,30 +516,42 @@ func TestPackageRemoval_MovePackage_NonMasterBranch(t *testing.T) {
 	}
 
 	want := &gta.Packages{
-		Dependencies: map[string][]*build.Package{
-			"gtaintegration/movedfrom": []*build.Package{
-				&build.Package{
-					ImportPath: "gtaintegration/movedfromclient",
+		Dependencies: map[string][]*gta.Package{
+			"gtaintegration/movedfrom": {
+				{
+					Package: &packages.Package{
+						PkgPath: "gtaintegration/movedfromclient",
+					},
 				},
 			},
 		},
-		Changes: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/movedfrom",
+		Changes: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfrom",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedto",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedto",
+				},
 			},
 		},
-		AllChanges: []*build.Package{
-			&build.Package{
-				ImportPath: "gtaintegration/movedfrom",
+		AllChanges: []*gta.Package{
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfrom",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedfromclient",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedfromclient",
+				},
 			},
-			&build.Package{
-				ImportPath: "gtaintegration/movedto",
+			{
+				Package: &packages.Package{
+					PkgPath: "gtaintegration/movedto",
+				},
 			},
 		},
 	}
@@ -541,9 +609,9 @@ func TestNonPackageRemoval(t *testing.T) {
 	}
 
 	want := &gta.Packages{
-		Dependencies: map[string][]*build.Package{},
-		Changes:      []*build.Package{},
-		AllChanges:   []*build.Package{},
+		Dependencies: map[string][]*gta.Package{},
+		Changes:      []*gta.Package{},
+		AllChanges:   []*gta.Package{},
 	}
 
 	got, err := gt.ChangedPackages()
@@ -567,7 +635,7 @@ func testMain(m *testing.M) error {
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(wd)
+	//	defer os.RemoveAll(wd)
 
 	// configure the repository.
 	err = createRepo(repoRoot)
@@ -587,7 +655,8 @@ func testMain(m *testing.M) error {
 	}
 
 	// This is super jank, but the default packager uses build.Default, so just set GOPATH in it...
-	build.Default.GOPATH = wd
+	os.Setenv("GOPATH", wd)
+	fmt.Println(os.Getenv("GOPATH"))
 
 	if i := m.Run(); i != 0 {
 		return errors.New("failed")

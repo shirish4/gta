@@ -17,18 +17,18 @@ func SetDiffer(d Differ) Option {
 	}
 }
 
-// SetPackager sets a packager on a GTA.
-func SetPackager(p Packager) Option {
-	return func(g *GTA) error {
-		g.packager = p
-		return nil
-	}
-}
-
 // SetPrefixes sets a list of prefix to be included
 func SetPrefixes(prefixes ...string) Option {
 	return func(g *GTA) error {
 		g.prefixes = prefixes
+		return nil
+	}
+}
+
+// SetTags sets a list of build tags to consider.
+func SetTags(tags ...string) Option {
+	return func(g *GTA) error {
+		g.tags = tags
 		return nil
 	}
 }
